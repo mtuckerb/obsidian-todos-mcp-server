@@ -27,7 +27,7 @@ class ObsidianTodosServer {
     this.server = new Server(
       {
         name: "obsidian-todos-mcp-server",
-        version: "1.0.0",
+        version: "1.1.0",
       },
       {
         capabilities: {
@@ -122,6 +122,27 @@ class ObsidianTodosServer {
             properties: {},
           },
         },
+        {
+          name: "list_due_dates",
+          description: "List all due dates from tables under # Due Dates headings in Obsidian",
+          inputSchema: {
+            type: "object",
+            properties: {
+              start: {
+                type: "string",
+                description: "Start date in YYYY-MM-DD format (optional)",
+              },
+              end: {
+                type: "string",
+                description: "End date in YYYY-MM-DD format (optional)",
+              },
+              query: {
+                type: "string",
+                description: "Query/tag filter (optional)",
+              },
+            },
+          },
+        },
       ],
     }));
 
@@ -194,6 +215,33 @@ class ObsidianTodosServer {
                 {
                   type: "text",
                   text: JSON.stringify(stats, null, 2),
+                },
+              ],
+            };
+          }
+
+          case "list_due_dates": {
+            const { start, end, query } = args as {
+              start?: string;
+              end?: string;
+              query?: string;
+            };
+            
+            // Build query parameters
+            const params = new URLSearchParams();
+            if (start) params.append("start", start);
+            if (end) params.append("end", end);
+            if (query) params.append("query", query);
+            
+            const queryString = params.toString();
+            const endpoint = queryString ? `/due-dates/?${queryString}` : "/due-dates/";
+            
+            const result = await this.fetchApi(endpoint);
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(result, null, 2),
                 },
               ],
             };
