@@ -27,7 +27,7 @@ class ObsidianTodosServer {
     this.server = new Server(
       {
         name: "obsidian-todos-mcp-server",
-        version: "1.1.0",
+        version: "1.1.3",
       },
       {
         capabilities: {
@@ -71,7 +71,26 @@ class ObsidianTodosServer {
           description: "List all incomplete todos from Obsidian vault using Dataview",
           inputSchema: {
             type: "object",
-            properties: {},
+            properties: {
+              status: {
+                type: "string",
+                description: "The todo status (e.g. ' ', '!', '*'",
+              },
+              completed: {
+                type: "boolean",
+                description: "Do you want completed tasks only?"
+              },
+              path: {
+                type: "string",
+                description: "Only search beneath this path"
+              },
+              tag: {
+                type: "string",
+                description: "only match on these tags"
+              },
+              exclude: "string",
+              description: "A comma separated list of paths to exclude"
+            }
           },
         },
         {
