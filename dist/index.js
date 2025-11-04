@@ -66,8 +66,10 @@ class ObsidianTodosServer {
                                 type: "string",
                                 description: "only match on these tags"
                             },
-                            exclude: "string",
-                            description: "A comma separated list of paths to exclude"
+                            exclude: {
+                                type: "string",
+                                description: "A comma separated list of paths to exclude"
+                            }
                         }
                     },
                 },
