@@ -27,7 +27,7 @@ class ObsidianTodosServer {
     this.server = new Server(
       {
         name: "obsidian-todos-mcp-server",
-        version: "1.2.2",
+        version: "1.2.3",
       },
       {
         capabilities: {
@@ -174,7 +174,26 @@ class ObsidianTodosServer {
       try {
         switch (name) {
           case "list_todos": {
-            const result = await this.fetchApi("/todos/");
+            const { status, completed, path, tag, exclude } = args as {
+              status?: string;
+              completed?: boolean;
+              path?: string;
+              tag?: string;
+              exclude?: string;
+            };
+
+            // Build query parameters
+            const params = new URLSearchParams();
+            if (status) params.append("status", status);
+            if (completed !== undefined) params.append("completed", completed.toString());
+            if (path) params.append("path", path);
+            if (tag) params.append("tag", tag);
+            if (exclude) params.append("exclude", exclude);
+
+            const queryString = params.toString();
+            const endpoint = queryString ? `/todos/?${queryString}` : "/todos/";
+
+            const result = await this.fetchApi(endpoint);
             return {
               content: [
                 {
