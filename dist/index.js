@@ -14,7 +14,7 @@ class ObsidianTodosServer {
         this.config = config;
         this.server = new Server({
             name: "obsidian-todos-mcp-server",
-            version: "1.2.3",
+            version: "1.2.4",
         }, {
             capabilities: {
                 tools: {},
@@ -166,11 +166,67 @@ class ObsidianTodosServer {
                         const queryString = params.toString();
                         const endpoint = queryString ? `/todos/?${queryString}` : "/todos/";
                         const result = await this.fetchApi(endpoint);
+                        // Process and filter the results
+                        const todos = result.todos || result || [];
+                        const processedTodos = [];
+                        const seenIds = new Set(); // For deduplication
+                        for (const todo of todos) {
+                            // Filter out completed tasks when completed=false
+                            if (completed === false && todo.status === "x") {
+                                continue;
+                            }
+                            // Extract only the required fields
+                            const filteredTodo = {
+                                text: todo.text,
+                                path: todo.path,
+                                line: todo.line,
+                                position: todo.position,
+                                status: todo.status,
+                                completed: todo.completed,
+                                fullyCompleted: todo.fullyCompleted,
+                                scheduled: todo.scheduled,
+                                due: todo.due,
+                                start: todo.start
+                            };
+                            // Add parent_id if it exists
+                            if (todo.id) {
+                                filteredTodo.parent_id = todo.parent_id || null;
+                            }
+                            // Create a unique key for deduplication
+                            const uniqueKey = `${todo.path}-${todo.line}-${todo.text}`;
+                            if (!seenIds.has(uniqueKey)) {
+                                seenIds.add(uniqueKey);
+                                processedTodos.push(filteredTodo);
+                            }
+                            // Process children if they exist
+                            if (todo.children && todo.children.length > 0) {
+                                for (const child of todo.children) {
+                                    const childUniqueKey = `${child.path}-${child.line}-${child.text}`;
+                                    if (!seenIds.has(childUniqueKey)) {
+                                        seenIds.add(childUniqueKey);
+                                        const processedChild = {
+                                            text: child.text,
+                                            path: child.path,
+                                            line: child.line,
+                                            position: child.position,
+                                            status: child.status,
+                                            completed: child.completed,
+                                            fullyCompleted: child.fullyCompleted,
+                                            scheduled: child.scheduled,
+                                            due: child.due,
+                                            start: child.start,
+                                            parent_id: todo.id || `${todo.path}-${todo.line}-${todo.text}`
+                                        };
+                                        processedTodos.push(processedChild);
+                                    }
+                                }
+                            }
+                        }
                         return {
                             content: [
                                 {
                                     type: "text",
-                                    text: JSON.stringify(result, null, 2),
+                                    text: JSON.stringify({ todos: processedTodos }, null, 2),
                                 },
                             ],
                         };
