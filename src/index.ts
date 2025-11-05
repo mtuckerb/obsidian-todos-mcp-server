@@ -195,46 +195,60 @@ class ObsidianTodosServer {
 
             const result = await this.fetchApi(endpoint);
             
+            // Debug: Log the raw API response
+            console.error("Raw API response:", JSON.stringify(result, null, 2));
+            
             // Process and filter the results
             const todos = result.todos || result || [];
+            console.error("Processing todos:", todos.length);
+            
             const processedTodos: any[] = [];
             const seenIds = new Set(); // For deduplication
 
             for (const todo of todos) {
+              // Debug: Log each todo being processed
+              console.error("Processing todo:", todo.text, "status:", todo.status, "completed:", todo.completed);
+              
               // Filter out completed tasks when completed=false
               if (completed === false && todo.status === "x") {
+                console.error("Filtering out completed task:", todo.text);
                 continue;
               }
 
               // Extract only the required fields
               const filteredTodo: any = {
-                text: todo.text,
-                path: todo.path,
-                line: todo.line,
-                position: todo.position,
-                status: todo.status,
-                completed: todo.completed,
-                fullyCompleted: todo.fullyCompleted,
-                scheduled: todo.scheduled,
-                due: todo.due,
-                start: todo.start
+                text: todo.text || "",
+                path: todo.path || "",
+                line: todo.line || 0,
+                position: todo.position || 0,
+                status: todo.status || " ",
+                completed: todo.completed || false,
+                fullyCompleted: todo.fullyCompleted || false,
+                scheduled: todo.scheduled || null,
+                due: todo.due || null,
+                start: todo.start || null
               };
 
               // Add parent_id if it exists
-              if (todo.id) {
-                filteredTodo.parent_id = todo.parent_id || null;
+              if (todo.id || todo.parent_id) {
+                filteredTodo.parent_id = todo.parent_id || todo.id || null;
               }
 
               // Create a unique key for deduplication
               const uniqueKey = `${todo.path}-${todo.line}-${todo.text}`;
+              console.error("Unique key:", uniqueKey);
               
               if (!seenIds.has(uniqueKey)) {
                 seenIds.add(uniqueKey);
                 processedTodos.push(filteredTodo);
+                console.error("Added todo to processed list:", todo.text);
+              } else {
+                console.error("Duplicate detected, skipping:", todo.text);
               }
 
               // Process children if they exist
               if (todo.children && todo.children.length > 0) {
+                console.error("Processing", todo.children.length, "children for:", todo.text);
                 for (const child of todo.children) {
                   const childUniqueKey = `${child.path}-${child.line}-${child.text}`;
                   
@@ -242,24 +256,27 @@ class ObsidianTodosServer {
                     seenIds.add(childUniqueKey);
                     
                     const processedChild = {
-                      text: child.text,
-                      path: child.path,
-                      line: child.line,
-                      position: child.position,
-                      status: child.status,
-                      completed: child.completed,
-                      fullyCompleted: child.fullyCompleted,
-                      scheduled: child.scheduled,
-                      due: child.due,
-                      start: child.start,
-                      parent_id: todo.id || `${todo.path}-${todo.line}-${todo.text}`
+                      text: child.text || "",
+                      path: child.path || "",
+                      line: child.line || 0,
+                      position: child.position || 0,
+                      status: child.status || " ",
+                      completed: child.completed || false,
+                      fullyCompleted: child.fullyCompleted || false,
+                      scheduled: child.scheduled || null,
+                      due: child.due || null,
+                      start: child.start || null,
+                      parent_id: todo.id || todo.parent_id || `${todo.path}-${todo.line}-${todo.text}`
                     };
                     
                     processedTodos.push(processedChild);
+                    console.error("Added child todo:", child.text);
                   }
                 }
               }
             }
+
+            console.error("Final processed todos count:", processedTodos.length);
 
             return {
               content: [

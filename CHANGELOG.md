@@ -14,6 +14,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Child Task Processing**: Children tasks are now flattened into separate todo objects with parent_id references
 - **Deduplication**: Added deduplication logic to prevent duplicate todos based on path, line, and text
 
+### Debug
+- Added comprehensive debug logging to troubleshoot empty tasks array issue
+- Logs show: raw API response, processing counts, individual todo status, filtering decisions, deduplication details, and final count
+- Debug logs help identify where data processing might be failing
+
 ### Technical
 - Updated server version to 1.2.4
 - Enhanced data processing for improved performance and cleaner responses
