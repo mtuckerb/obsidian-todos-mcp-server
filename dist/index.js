@@ -14,7 +14,7 @@ class ObsidianTodosServer {
         this.config = config;
         this.server = new Server({
             name: "obsidian-todos-mcp-server",
-            version: "1.1.3",
+            version: "1.2.2",
         }, {
             capabilities: {
                 tools: {},
